@@ -1,0 +1,30 @@
+html{
+    background: fixed;
+    background-color: rgb(147, 170, 214);
+}
+
+h1{
+    font-size: 54px;
+    display: flex;
+    justify-content: center;
+}
+
+.reset{
+    display: flex;
+    justify-content: center;
+}
+
+button{
+    background-color: lime;
+}
+
+button:hover{
+    background-color: lightgreen;
+}
+
+p{
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    color: rgb(39, 22, 26);
+}
