@@ -15,11 +15,12 @@ h1{
 }
 
 button{
-    background-color: lime;
+    background-color: rgb(110, 133, 110);
+    margin: 20px auto;
 }
 
 button:hover{
-    background-color: lightgreen;
+    background-color: rgb(77, 204, 140);
 }
 
 p{
@@ -27,4 +28,17 @@ p{
     display: flex;
     justify-content: center;
     color: rgb(39, 22, 26);
+}
+
+#canvas{
+    display: flex;
+    justify-content: center;
+}
+
+.pixel{
+    border : 1px solid black;
+    background: white;
+}
+.pixel:hover{
+    background: pink;
 }
