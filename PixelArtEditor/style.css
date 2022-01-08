@@ -15,12 +15,18 @@ h1{
 }
 
 button{
-    background-color: rgb(110, 133, 110);
-    margin: 20px auto;
+    background-color: rgb(52, 109, 87);
+    margin: 15px auto 0px auto;
+    width: 100px;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 22px;
+    color: honeydew;
 }
 
 button:hover{
-    background-color: rgb(77, 204, 140);
+    background-color: rgb(134, 236, 185);
+    color: rgb(1, 32, 119);
 }
 
 p{
@@ -28,6 +34,8 @@ p{
     display: flex;
     justify-content: center;
     color: rgb(39, 22, 26);
+    margin: 0px, auto;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 #canvas{
@@ -36,9 +44,9 @@ p{
 }
 
 .pixel{
-    border : 1px solid black;
+    border : 1px solid rgb(25, 27, 31);
     background: white;
 }
 .pixel:hover{
-    background: pink;
+    background: rgb(252, 212, 218);
 }
