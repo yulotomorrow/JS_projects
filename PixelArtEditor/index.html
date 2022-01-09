@@ -9,9 +9,14 @@
 </head>
 <body>
   <h1> Create your pixel art here! </h1>
-  <div id = "canvas">  </div>
+  <div id = "canvas"> 
+    <div id = "pixelDiv"> </div>
+    <div id = "paletteDiv"> </div>
+  </div>
   <div class = "reset" id = "resetButton">
-   <button type="button"> 
+   <input type="number" id="canvasSize" name="canvas size"
+    min = 8 max = 48 value="16">
+   <button type="button" id = "button"> 
            reset </button>
   </div>
   <p> by yulotomorrow </p>

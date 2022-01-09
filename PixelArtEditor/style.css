@@ -16,12 +16,20 @@ h1{
 
 button{
     background-color: rgb(52, 109, 87);
-    margin: 15px auto 0px auto;
+    margin: 15px auto 0px 30px;
     width: 100px;
     height: 40px;
     border-radius: 8px;
     font-size: 22px;
     color: honeydew;
+}
+#canvasSize{
+    margin: 15px 30px 0px auto;
+    width: 60px;
+    height: 35px;
+    font-size: 18px;
+    color: rgb(25, 4, 65);
+    border: 2px solid black;
 }
 
 button:hover{
@@ -43,10 +51,38 @@ p{
     justify-content: center;
 }
 
+#pixelDiv{
+    display : grid;
+	grid-template-columns: repeat(16, 1fr);
+	height: 500px;
+	width: 500px;   
+    background: rgb(25, 27, 31);	
+	border: 5px solid rgb(25, 27, 31);
+}
+
+#paletteDiv{
+    display : grid;
+	grid-template-columns: repeat(2, 1fr);
+	height: 250px;
+	width: 100px;   
+    background: rgb(121, 161, 240);	
+	border: 3px solid rgb(25, 27, 31);
+    justify-self : left;
+    align-self: flex-end;
+    padding: 40px 10px 20px 10px;
+}
+
 .pixel{
     border : 1px solid rgb(25, 27, 31);
     background: white;
 }
+
+.palette{
+    border : 1px solid rgb(25, 27, 31);
+    background: white;
+    margin: 5px;
+    border-radius: 2px;
+}
 .pixel:hover{
-    background: rgb(252, 212, 218);
+    background: rgb(231, 231, 231);
 }
