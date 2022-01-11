@@ -5,13 +5,16 @@ function random_rgb() {
     return 'rgb(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ')';
 }
 
-var color = "gray";
+var color = "rgb(0, 0, 0)";
 var dimensionVal = 16;
-var resize = 8;
-
-var colorList = ["rgb(0, 0, 0)", "rgb(72,61,139)","rgb(105,105,105)", "rgb(153,50,204)", 
-				"rgb(65,105,225)", "rgb(147,112,219)", "rgb(210,105,30)", "rgb(188,143,143)", 
-				"rgb(255,192,203)", "rgb(255,228,225)", "rgb(255,255,224)", "rgb(255, 255, 255)"];
+var resize = 1;
+var colorNum = [[0, 0, 0], [72, 61, 139], [105, 105, 105], [153, 50, 204],
+				[65, 105, 225], [147, 112, 219], [210, 105, 30], [188, 143, 143],
+				[255, 192, 203], [255, 228, 225], [255, 255, 224], [255, 255, 255]];
+// the list below could put up from numbers
+var colorList = ["rgb(0, 0, 0)", "rgb(72, 61, 139)","rgb(105, 105, 105)", "rgb(153, 50, 204)", 
+				"rgb(65, 105, 225)", "rgb(147, 112, 219)", "rgb(210, 105, 30)", "rgb(188, 143, 143)", 
+				"rgb(255, 192, 203)", "rgb(255, 228, 225)", "rgb(255, 255, 224)", "rgb(255, 255, 255)"];
 
 function addPixelElement(dimension = 16){
 
@@ -26,9 +29,9 @@ function addPixelElement(dimension = 16){
 
 		const pixelSingle = document.createElement("div"); 
 		pixelDiv.appendChild(pixelSingle);
-		pixelSingle.className = "pixel";
-		pixelSingle.addEventListener("click", (e) => e.target.style.background = color );	
-		//colorList[Math.round(Math.random()*4)]
+		pixelSingle.className = "pixel"; 
+		pixelSingle.addEventListener("mousedown", (e) => e.target.style.background = color );	
+		pixelSingle.addEventListener("mouseenter", (e) => {if(e.buttons>0){e.target.style.background = color} });	
 	}	
 };
 
@@ -62,7 +65,7 @@ resetButton.onclick = function(e){
 	if(inputVal > 48) {inputVal = 48};
 	dimensionVal = inputVal;
 	document.querySelector("input").value = inputVal;
-	color = "gray";
+	color = "rgb(0, 0, 0)";
 	const paletteSingle = document.getElementById("currentColor"); 
 	paletteSingle.style.background = color;
 	addPixelElement(inputVal);
@@ -88,14 +91,65 @@ function stringToByte(str = "0"){
 	return binaryStr;
 }
 
-function paletteEncoding(p = colorList){
+function paletteEncoding(p = colorNum){
 
 	var paletteStr = new String("");
 	for (var i = 0; i < 12; ++i){
-
-		p[i];
-		paletteStr += (str[i].charCodeAt(0).toString(2)).padStart(8, "0");
+		var str = [p[i][0], p[i][1], p[i][2]];
+		for (var j = 0; j < 3; ++j)
+			paletteStr += (str[j].toString(2)).padStart(8, "0");
 	}
+	return paletteStr;
+}
+
+function pixelEncoding(){
+
+	const pixels = document.querySelectorAll(".pixel");
+	var pixelStr = new String("");
+	
+	pixels.forEach(p => { 
+		var empty = true;
+		for(var i = 0; i < 12; ++i){
+
+			if(p.style.background === colorList[i]){
+				pixelStr += valueToByte(i);
+				empty = false;
+				break;
+			}		
+		}
+		if (empty)
+				pixelStr +=  valueToByte(11);	
+	}); 
+	return pixelStr;
+}
+
+function crcTable(){
+
+	var crcT = new Uint8Array(256);
+	for(var n = 0; n <256; ++n){
+		var c = n;
+		for(var k = 0; k <8 ; ++k){
+			if(c & 1)
+				c = 0xedb8320 ^ (c >>> 1);
+			else
+				c = c >>> 1;
+		}
+		crcT[n] = c;
+	}
+	return crcT;
+}
+
+var crcTableCalc = crcTable();
+
+function crcEncoding(bStr = ""){
+
+	const crc32 = 0xedb88320;
+	var c = 0xffffffff;
+	for (n = 0; n < bStr.length; ++n)
+	{
+		c = crcTableCalc[(c ^ bStr[n]) & 0xff] ^ (c >>> 8);
+	}
+	return c ^ 0xffffffff;
 }
 
 function createPNG(){
@@ -108,11 +162,12 @@ function createPNG(){
 					+ valueToByte(dimensionVal * resize, 4) 
 					+ valueToByte(8) + valueToByte(3)
 					+ valueToByte(0) + valueToByte(0) + valueToByte(0);	
-	const paletteChunk = valueToByte(12 * 3, 4) + stringToByte("PLTE") ;
-	var contentChunk = valueToByte((dimensionVal * resize)**2, 4) + stringToByte("IDAT");
+	const paletteChunk = valueToByte(12 * 3, 4) + stringToByte("PLTE") + paletteEncoding();
+	const contentChunk = valueToByte((dimensionVal * resize)**2, 4) + stringToByte("IDAT") + pixelEncoding();
 	const endChunk =  valueToByte(0, 4) + stringToByte("IEND");
-	fileString = pngMagicNumber + chunkInfo1; 
+	fileString = contentChunk; 
 	//pngMagicNumber + chunkInfo1 + paletteChunk + contentChunk + 
+	var byteArr = new Uint8Array();
 	return fileString;
 }
 

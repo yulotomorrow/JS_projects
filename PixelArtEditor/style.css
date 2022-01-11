@@ -85,7 +85,7 @@ p{
     grid-row: 2/3;
     padding: 5px 15px;
     margin: 0px 10px 10px 10px;
-    background: gray;
+    background: rgb(0, 0, 0);
     border: 2px solid #0d0c1c;
     border-radius: 8px;
 }
@@ -101,7 +101,7 @@ p{
 
 .pixel{
     border : 1px solid rgb(25, 27, 31);
-    background: white;
+    background: rgb(255, 255, 255);
 }
 
 .palette{
