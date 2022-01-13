@@ -1,10 +1,8 @@
-//const pako = require('pako');
-
 document.body.onload = function(e){initialization()};
 
 var color = "rgb(0, 0, 0)";
 var dimensionVal = 16;
-var resize = 1;
+var resize = 5;
 var colorNum = [[0, 0, 0], [72, 61, 139], [105, 105, 105], [153, 50, 204],
 				[65, 105, 225], [147, 112, 219], [210, 105, 30], [188, 143, 143],
 				[255, 192, 203], [255, 228, 225], [255, 255, 224], [255, 255, 255]];
@@ -104,28 +102,53 @@ function paletteEncoding(p = colorNum){
 	return paletteArr;
 }
 
-function pixelEncoding(dimension = dimensionVal){
+function pixelColorGrabbing(dimension = dimensionVal){
 
 	const pixels = document.querySelectorAll(".pixel");
-	var pixelArr = [];
 	var j = 0;
+	var pixelArr = [];
+	var pixelLine = [];
 	pixels.forEach(p => { 
 		var empty = true;
-		if((j % dimension) == 0)
-			pixelArr.push(0);
 		for(var i = 0; i < 12; ++i){
 
 			if(p.style.background === colorList[i]){
-				pixelArr.push(i);
+				pixelLine.push(i);
 				empty = false;
 				break;
 			}		
 		}
 		if (empty){
-				pixelArr.push(11);
+				pixelLine.push(11);
+		}
+		if((j % dimension) === dimension - 1){
+			pixelArr.push(pixelLine);
+			pixelLine = [];
 		}
 		j++;
 	}); 
+	return pixelArr;
+}
+
+function pixelEncoding(dimension = dimensionVal, arr, enlarge = 1){
+
+	var pixelArr = [];
+	var pixelLine = [0];
+	var j = 0;
+	for(var n = 0; n < dimension; ++n){
+
+		arr[n].forEach(p => { 
+			for (var r =0; r < enlarge; ++r){
+				
+				pixelLine.push(p);
+			}
+		});
+		for (var s =0; s < enlarge; ++s){
+				
+			pixelArr = [...pixelArr, ...pixelLine];
+		}
+		pixelLine = [0];
+	}
 	return pixelArr;
 }
 
@@ -171,7 +194,7 @@ function zlibLength (length){
 function zlibHeader(){
 
 	const ZLIB_WINDOW_SIZE = 1024 * 32;
-	let cinfo = 7;// Math.LOG2E * Math.log(ZLIB_WINDOW_SIZE) - 8;
+	let cinfo = 7;
 	let compressionMethod = 8; 
 	
 	let cmf = (cinfo << 4) | compressionMethod;
@@ -196,8 +219,6 @@ function adler32_buf(buf) {
             b += a;
 			b %= 65521;
         }
-//        a = (15 * (a >>> 16) + (a & 65535));
-//       b = (15 * (b >>> 16) + (b & 65535));
     return valueToMultiByte((((b % 65521) << 16) | (a % 65521)) >>> 0);
 }
 
@@ -217,7 +238,7 @@ function createPNG(){
 	paletteChunk = [...valueToMultiByte(12 * 3, 4), ...paletteChunk, ...paletteCRC];
 
 	var contentChunk = [ ...stringToByte("IDAT"), ...zlibHeader(), 128]; // compress header is 3 BITS so 100 and 0s => 128
-	var unSupContent = pixelEncoding(dimensionVal * resize);
+	var unSupContent = pixelEncoding(dimensionVal, pixelColorGrabbing(dimensionVal), resize);
 	var lData = unSupContent.length;
 	contentChunk = [...contentChunk, ...zlibLength(lData), ...unSupContent, ...adler32_buf(unSupContent)];
 
@@ -228,25 +249,6 @@ function createPNG(){
 
 	fileString = [...magicNumSequence, ...chunkInfo1, ...paletteChunk, ...contentChunk, ... endChunk]; 
 	const byteArr = new Uint8Array(fileString);
-
-	//ed pixel test
-	var testContent = [...zlibHeader(), 128, ...zlibLength (4),
-	...[0x00, 0xFF, 0x00, 0x00], 
-	...adler32_buf([0x00, 0xFF, 0x00, 0x00])];
-	var lengthSig = valueToMultiByte(testContent.length, 4);
-	testContent = [...stringToByte("IDAT"), ...testContent];
-	var crcCon =  crcEncoding(testContent);
-	const testStr = [...magicNumSequence, ...chunkInfo1, ...lengthSig, 
-		...testContent, ...crcCon, ...endChunk];
-	const testByte = new Uint8Array(testStr);
-//	const output = pako.deflate(byteArr);
-/*
-[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 
-		0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 
-		0xDE, 0x00, 0x00, 0x00, 0x0C, 0x49, 0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0xF8, 0xCF, 0xC0, 0x00, 
-		0x00, 0x03, 0x01, 0x01, 0x00, 0x18, 0xDD, 0x8D, 0xB0, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 
-		0x44, 0xAE, 0x42, 0x60, 0x82];
-*/
 
 	return byteArr;
 }
