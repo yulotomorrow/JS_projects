@@ -1,2 +1,2 @@
-# JS_projects
-JavaScript practice projects by yulotomorrow
+# PixelArtEditor
+Web based pixel art endtor. A JavaScript practice project by yulotomorrow
