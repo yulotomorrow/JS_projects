@@ -1,9 +1,6 @@
-document.body.onload = function(e){initialization()};
+//const pako = require('pako');
 
-function random_rgb() {
-    var o = Math.round, r = Math.random, s = 255;
-    return 'rgb(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ')';
-}
+document.body.onload = function(e){initialization()};
 
 var color = "rgb(0, 0, 0)";
 var dimensionVal = 16;
@@ -71,22 +68,28 @@ resetButton.onclick = function(e){
 	addPixelElement(inputVal);
 };
 
+// png data 
+function valueToMultiByte(val, byteNum = 4){
 
-function valueToByte(val, byteNum = 1){
+	var byteArr = [];
+	var byte4Str = ((val >>> 0).toString(2)).padStart(8 * byteNum, "0");
+	var bStr = "";
+	for(var i = 0; i < byte4Str.length; ++i){
 
-	return (val.toString(2)).padStart(8 * byteNum, "0");
-}
-
-function hexToByte(val, byteNum = 1){
-
-	return (parseInt(val, 16).toString(2)).padStart(8 * byteNum, "0");
+		bStr += byte4Str[i];
+		if( i % 8 === 7){
+			byteArr.push(parseInt(bStr, 2));
+			bStr = "";
+		}
+	}
+	return byteArr;
 }
 
 function stringToByte(str = "0"){
-	var binaryStr = new String("");
+	var binaryStr = [];
 	for (var i = 0; i < str.length; ++i){
 
-		binaryStr += (str[i].charCodeAt(0).toString(2)).padStart(8, "0");
+		binaryStr.push(str[i].charCodeAt(0));
 	}
 	return binaryStr;
 }
@@ -94,81 +97,158 @@ function stringToByte(str = "0"){
 function paletteEncoding(p = colorNum){
 
 	var paletteStr = new String("");
+	var paletteArr = [];
 	for (var i = 0; i < 12; ++i){
-		var str = [p[i][0], p[i][1], p[i][2]];
-		for (var j = 0; j < 3; ++j)
-			paletteStr += (str[j].toString(2)).padStart(8, "0");
+		paletteArr = paletteArr.concat(p[i]);
 	}
-	return paletteStr;
+	return paletteArr;
 }
 
-function pixelEncoding(){
+function pixelEncoding(dimension = dimensionVal){
 
 	const pixels = document.querySelectorAll(".pixel");
-	var pixelStr = new String("");
-	
+	var pixelArr = [];
+	var j = 0;
 	pixels.forEach(p => { 
 		var empty = true;
+		if((j % dimension) == 0)
+			pixelArr.push(0);
 		for(var i = 0; i < 12; ++i){
 
 			if(p.style.background === colorList[i]){
-				pixelStr += valueToByte(i);
+				pixelArr.push(i);
 				empty = false;
 				break;
 			}		
 		}
-		if (empty)
-				pixelStr +=  valueToByte(11);	
+		if (empty){
+				pixelArr.push(11);
+		}
+		j++;
 	}); 
-	return pixelStr;
+	return pixelArr;
 }
 
 function crcTable(){
 
-	var crcT = new Uint8Array(256);
-	for(var n = 0; n <256; ++n){
-		var c = n;
-		for(var k = 0; k <8 ; ++k){
-			if(c & 1)
-				c = 0xedb8320 ^ (c >>> 1);
+	var crcT = new Uint32Array(256);
+	for(var n = 0; n < 256; ++n){
+		var c = (n >>> 0);
+		for(var k = 0; k < 8 ; ++k){
+			if((c & 1) === 1)
+				c = (0xedb88320 ^ (c >>> 1)) >>> 0;
 			else
-				c = c >>> 1;
+				c = (c >>> 1);
 		}
 		crcT[n] = c;
 	}
 	return crcT;
 }
 
-var crcTableCalc = crcTable();
+const crcTableCalc = crcTable();
 
-function crcEncoding(bStr = ""){
+function crcEncoding(bStr){
 
-	const crc32 = 0xedb88320;
-	var c = 0xffffffff;
+	const crc32 = 0xedb88320 >>> 0;
+	var c = 0xffffffff >>> 0;
+	
 	for (n = 0; n < bStr.length; ++n)
 	{
-		c = crcTableCalc[(c ^ bStr[n]) & 0xff] ^ (c >>> 8);
+		c = (crcTableCalc[(c ^ (bStr[n] >>> 0)) & 0xff] ^ (c >>> 8) ) >>> 0;
 	}
-	return c ^ 0xffffffff;
+	return valueToMultiByte((c ^ 0xffffffff) >>> 0, 4);
+}
+// IEND: [174 66 96 130]
+
+// compression
+function zlibLength (length){
+
+	var compLength = (~length + 0x10000) & 0xffff;
+	var lengthArr = [...valueToMultiByte(length, 2), ...valueToMultiByte(compLength, 2)];
+	return lengthArr;
+}
+
+function zlibHeader(){
+
+	const ZLIB_WINDOW_SIZE = 1024 * 32;
+	let cinfo = 7;// Math.LOG2E * Math.log(ZLIB_WINDOW_SIZE) - 8;
+	let compressionMethod = 8; 
+	
+	let cmf = (cinfo << 4) | compressionMethod;
+
+	let fdict = 0; 
+	let flevel = 0; 
+
+	let flg = (flevel << 6) | (fdict << 5);
+	let fcheck = 31 - (cmf * 256 + flg) % 31;
+	flg |= fcheck;
+
+	let zHeader = [cmf, flg];
+	return zHeader;
+}
+
+function adler32_buf(buf) {
+
+    var a = 1, b = 0, L = buf.length;
+    for (var i = 0; i < L; ++i) {
+            a += (buf[i] >>> 0);
+			a %= 65521;
+            b += a;
+			b %= 65521;
+        }
+//        a = (15 * (a >>> 16) + (a & 65535));
+//       b = (15 * (b >>> 16) + (b & 65535));
+    return valueToMultiByte((((b % 65521) << 16) | (a % 65521)) >>> 0);
 }
 
 function createPNG(){
 
 	var fileString ="";
-	const magicNumSequence = ["89", "50", "4e", "47", "0d", "0a", "1a", "0a"];
-	var pngMagicNumber = "";
-	magicNumSequence.forEach(val => {pngMagicNumber += hexToByte(val, 1)});
-	const chunkInfo1 = valueToByte(13, 4) + stringToByte("IHDR") +valueToByte(dimensionVal * resize, 4) 
-					+ valueToByte(dimensionVal * resize, 4) 
-					+ valueToByte(8) + valueToByte(3)
-					+ valueToByte(0) + valueToByte(0) + valueToByte(0);	
-	const paletteChunk = valueToByte(12 * 3, 4) + stringToByte("PLTE") + paletteEncoding();
-	const contentChunk = valueToByte((dimensionVal * resize)**2, 4) + stringToByte("IDAT") + pixelEncoding();
-	const endChunk =  valueToByte(0, 4) + stringToByte("IEND");
-	fileString = contentChunk; 
-	//pngMagicNumber + chunkInfo1 + paletteChunk + contentChunk + 
-	var byteArr = new Uint8Array();
-	return fileString;
+	const magicNumSequence = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+	var pngMagicNumber = new Uint8Array(magicNumSequence);
+
+	var chunkInfo1 = [...stringToByte("IHDR"), ...valueToMultiByte(dimensionVal * resize, 4),
+					...valueToMultiByte(dimensionVal * resize, 4), ...[8, 3, 0, 0, 0]];	//[8 3 0 0 0]
+	const infoCRC = crcEncoding(chunkInfo1);
+	chunkInfo1 = [...valueToMultiByte(13, 4), ...chunkInfo1, ...infoCRC];
+
+	var paletteChunk = [...stringToByte("PLTE"), ...(paletteEncoding())];
+	const paletteCRC = crcEncoding(paletteChunk);
+	paletteChunk = [...valueToMultiByte(12 * 3, 4), ...paletteChunk, ...paletteCRC];
+
+	var contentChunk = [ ...stringToByte("IDAT"), ...zlibHeader(), 128]; // compress header is 3 BITS so 100 and 0s => 128
+	var unSupContent = pixelEncoding(dimensionVal * resize);
+	var lData = unSupContent.length;
+	contentChunk = [...contentChunk, ...zlibLength(lData), ...unSupContent, ...adler32_buf(unSupContent)];
+
+	const contentCRC = crcEncoding(contentChunk);
+	contentChunk = [...valueToMultiByte(contentChunk.length - 4, 4), ...contentChunk, ...contentCRC];
+
+	const endChunk =  [...valueToMultiByte(0, 4), ...stringToByte("IEND"), ...crcEncoding(stringToByte("IEND"))];
+
+	fileString = [...magicNumSequence, ...chunkInfo1, ...paletteChunk, ...contentChunk, ... endChunk]; 
+	const byteArr = new Uint8Array(fileString);
+
+	//ed pixel test
+	var testContent = [...zlibHeader(), 128, ...zlibLength (4),
+	...[0x00, 0xFF, 0x00, 0x00], 
+	...adler32_buf([0x00, 0xFF, 0x00, 0x00])];
+	var lengthSig = valueToMultiByte(testContent.length, 4);
+	testContent = [...stringToByte("IDAT"), ...testContent];
+	var crcCon =  crcEncoding(testContent);
+	const testStr = [...magicNumSequence, ...chunkInfo1, ...lengthSig, 
+		...testContent, ...crcCon, ...endChunk];
+	const testByte = new Uint8Array(testStr);
+//	const output = pako.deflate(byteArr);
+/*
+[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 
+		0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 
+		0xDE, 0x00, 0x00, 0x00, 0x0C, 0x49, 0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0xF8, 0xCF, 0xC0, 0x00, 
+		0x00, 0x03, 0x01, 0x01, 0x00, 0x18, 0xDD, 0x8D, 0xB0, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 
+		0x44, 0xAE, 0x42, 0x60, 0x82];
+*/
+
+	return byteArr;
 }
 
 function download(text, name, format){
@@ -182,5 +262,6 @@ function download(text, name, format){
 const dlButton = document.getElementById("dlButton");
 dlButton.onclick = function(e){
 
-	download(createPNG(), "test.txt", "text/txt");
+//	download(createPNG(), "test.txt", "text/txt");
+	download(createPNG(), "test.png", "image/png");
 };
