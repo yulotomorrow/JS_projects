@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <title>Pixel art editor</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1> Create your pixel art here! </h1>
+  <div id = "canvas"> 
+    <div id = "pixelDiv"> </div>
+    <div id = "paletteDiv"> 
+      <a href = "" id = "dl">
+        <button type="button" id = "dlButton"> 
+          Download </button>
+      </a>
+      <div id = "currentColor"> </div>
+    </div>
+  </div>
+  <div class = "reset" id = "resetButton">
+   <input type="number" id="canvasSize" name="canvas size"
+    min = 8 max = 48 value="16">
+   <button type="button" id = "button"> 
+           reset </button>
+  </div>
+  <p> by yulotomorrow </p>
+  <script src="script.js"></script>
+</body>
+</html>
