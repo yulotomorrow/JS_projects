@@ -207,8 +207,8 @@ function createPNG(){
 	const magicNumSequence = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 	var pngMagicNumber = new Uint8Array(magicNumSequence);
 
-	var chunkInfo1 = [...stringToByte("IHDR"), ...valueToMultiByte(1 * resize, 4),
-					...valueToMultiByte(1 * resize, 4), ...[8, 2, 0, 0, 0]];	//[8 3 0 0 0]
+	var chunkInfo1 = [...stringToByte("IHDR"), ...valueToMultiByte(dimensionVal * resize, 4),
+					...valueToMultiByte(dimensionVal * resize, 4), ...[8, 3, 0, 0, 0]];	//[8 3 0 0 0]
 	const infoCRC = crcEncoding(chunkInfo1);
 	chunkInfo1 = [...valueToMultiByte(13, 4), ...chunkInfo1, ...infoCRC];
 
@@ -216,7 +216,7 @@ function createPNG(){
 	const paletteCRC = crcEncoding(paletteChunk);
 	paletteChunk = [...valueToMultiByte(12 * 3, 4), ...paletteChunk, ...paletteCRC];
 
-	var contentChunk = [ ...stringToByte("IDAT"), ...zlibHeader(), ...[1, 0, 0]];
+	var contentChunk = [ ...stringToByte("IDAT"), ...zlibHeader(), 128]; // compress header is 3 BITS so 100 and 0s => 128
 	var unSupContent = pixelEncoding(dimensionVal * resize);
 	var lData = unSupContent.length;
 	contentChunk = [...contentChunk, ...zlibLength(lData), ...unSupContent, ...adler32_buf(unSupContent)];
@@ -229,14 +229,15 @@ function createPNG(){
 	fileString = [...magicNumSequence, ...chunkInfo1, ...paletteChunk, ...contentChunk, ... endChunk]; 
 	const byteArr = new Uint8Array(fileString);
 
-	//
-	const testCOntent = [...stringToByte("IDAT"), 
-	...[0x08, 0xD7, 0x63, 0xF8, 0xCF, 0xC0, 0x00, 0x00], 
+	//ed pixel test
+	var testContent = [...zlibHeader(), 128, ...zlibLength (4),
+	...[0x00, 0xFF, 0x00, 0x00], 
 	...adler32_buf([0x00, 0xFF, 0x00, 0x00])];
-	
-	const testStr = [...magicNumSequence, ...chunkInfo1, ...[0x00, 0x00, 0x00, 0x0C], ...stringToByte("IDAT"), 
-		...[0x08, 0xD7, 0x63, 0xF8, 0xCF, 0xC0, 0x00, 0x00], 
-		...adler32_buf([0x00, 0xFF, 0x00, 0x00]), ...[0x18, 0xDD, 0x8D, 0xB0], ...endChunk];
+	var lengthSig = valueToMultiByte(testContent.length, 4);
+	testContent = [...stringToByte("IDAT"), ...testContent];
+	var crcCon =  crcEncoding(testContent);
+	const testStr = [...magicNumSequence, ...chunkInfo1, ...lengthSig, 
+		...testContent, ...crcCon, ...endChunk];
 	const testByte = new Uint8Array(testStr);
 //	const output = pako.deflate(byteArr);
 /*
@@ -247,7 +248,7 @@ function createPNG(){
 		0x44, 0xAE, 0x42, 0x60, 0x82];
 */
 
-	return testByte;
+	return byteArr;
 }
 
 function download(text, name, format){
