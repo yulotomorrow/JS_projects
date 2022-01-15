@@ -8,7 +8,9 @@ h1{
     font-size: 54px;
     display: flex;
     justify-content: center;
-    margin-block: 30px;
+    margin-block: 40px 15px;
+    text-decoration-style: dotted;
+    -webkit-text-stroke: thin;
     font-family: cursive;
     font-weight: 600;
     color: #1d1639;
@@ -24,7 +26,7 @@ h1{
 
 #button{
     background-color: rgb(52, 109, 87);
-    margin: 15px auto 0px 30px;
+    margin: 15px 0px 0px 20px;
     width: 100px;
     height: 40px;
     border-radius: 8px;
@@ -33,12 +35,35 @@ h1{
 }
 
 #canvasSize{
-    margin: 15px 30px 0px auto;
-    width: 60px;
+    width: 52px;
     height: 35px;
+    text-align: center;
+}
+
+#paletteSelect{    
+    width: 145px;
+    height: 40px;
+}
+
+label{
     font-size: 18px;
+    max-width: 110px;
+    min-width: min-content;
+    text-align: end;
+    margin-block-start: 10px;
+    font-family: system-ui;
+    word-spacing: 0px;
+    line-height: 1.2em;
+}
+
+input, select{
+    margin: 15px 20px 0px 10px;
+    padding: 0px;
+    background-color: rgb(241, 241, 232);
+    border-radius: 5px;
+    font-size: 20px;
     color: rgb(25, 4, 65);
-    border: 2px solid black;
+    border: 3px solid rgb(13, 17, 32);
 }
 
 p{
@@ -61,7 +86,7 @@ p{
 	height: 500px;
 	width: 500px;   
     background: rgb(25, 27, 31);	
-	border: 5px solid rgb(25, 27, 31);
+	border: 5px solid rgb(40, 43, 48);
 }
 #paletteDiv{
     display : grid;
@@ -81,6 +106,7 @@ p{
 }
 
 #dlButton{
+    position: relative;
     background-color: rgb(67, 52, 109);
     height: 40px;
     border-radius: 8px;
@@ -107,7 +133,7 @@ p{
 }
 
 .pixel{
-    border : 1px solid rgb(25, 27, 31);
+    border : 1px solid rgb(53, 51, 68);
     background: rgb(255, 255, 255);
 }
 

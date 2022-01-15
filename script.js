@@ -1,15 +1,53 @@
 document.body.onload = function(e){initialization()};
 
 var color = "rgb(0, 0, 0)";
+var paletteIndex = 0;
 var dimensionVal = 16;
 var resize = 5;
-var colorNum = [[0, 0, 0], [72, 61, 139], [105, 105, 105], [153, 50, 204],
+const colorNum = [[[0, 0, 0], [72, 61, 139], [105, 105, 105], [153, 50, 204],
 				[65, 105, 225], [147, 112, 219], [210, 105, 30], [188, 143, 143],
-				[255, 192, 203], [255, 228, 225], [255, 255, 224], [255, 255, 255]];
+				[255, 153, 203], [255, 228, 225], [245, 234, 51], [255, 255, 255]],
+
+				[[0, 0, 0], [74, 40, 6], [102, 0, 204], [0, 0, 204],
+				[0, 128, 255], [0, 153, 76], [51, 255, 51], [246, 238, 0],
+				[255, 153, 51], [255, 51, 51], [255, 153, 204], [255, 255, 255]],
+
+				[[0, 0, 0], [51, 25, 0], [64, 64, 64], [41, 8, 75],
+				[102, 0, 0], [55, 36, 88], [204, 0, 0], [184, 134, 11],
+				[79, 156, 245], [255, 215, 0], [204, 255, 255], [255, 255, 255]],
+
+				[[0, 0, 0], [75, 51, 14], [0, 51, 0], [0, 102, 51],
+				[0, 153, 0], [102, 124, 0], [0, 128, 255], [102, 178, 255],
+				[101, 91, 73], [255, 153, 102], [151, 161, 168], [255, 255, 255]],
+
+				[[0, 0, 0], [58, 54, 44], [41, 50, 36], [114, 107, 90],
+				[67, 80, 59], [71, 69, 92], [96, 111, 78], [69, 80, 97],
+				[157, 176, 134], [199, 193, 171], [203, 210, 194], [255, 255, 255]],
+				];
 // the list below could put up from numbers
-var colorList = ["rgb(0, 0, 0)", "rgb(72, 61, 139)","rgb(105, 105, 105)", "rgb(153, 50, 204)", 
+
+function parsePalette(color){
+
+	var colorL = [];
+	for (var i = 0; i < 12; ++i){
+
+		var rgbStr = "rgb(";
+		for (var j = 0; j < 3; ++j){
+
+			rgbStr += color[i][j].toString(10);
+			if (j != 2)
+				rgbStr += ", ";
+		}
+		rgbStr += ")";
+		colorL.push(rgbStr);
+	}
+	return colorL;
+}
+
+var colorList =  parsePalette(colorNum[paletteIndex]);
+/*["rgb(0, 0, 0)", "rgb(72, 61, 139)","rgb(105, 105, 105)", "rgb(153, 50, 204)", 
 				"rgb(65, 105, 225)", "rgb(147, 112, 219)", "rgb(210, 105, 30)", "rgb(188, 143, 143)", 
-				"rgb(255, 192, 203)", "rgb(255, 228, 225)", "rgb(255, 255, 224)", "rgb(255, 255, 255)"];
+				"rgb(255, 153, 203)", "rgb(255, 228, 225)", "rgb(245, 234, 51)", "rgb(255, 255, 255)"];*/
 
 function addPixelElement(dimension = 16){
 
@@ -46,6 +84,16 @@ function addPaletteElement(){
 	}	
 };
 
+function resetPaletteColor(paletteVal = paletteIndex){
+
+	var oldPalette = document.getElementById("paletteDiv").getElementsByClassName("palette");
+	colorList = parsePalette(colorNum[paletteVal]);
+	for(let i = 0; i < 12; ++i){
+
+		oldPalette[i].style.background = colorList[i];
+	}
+}
+
 function initialization(){
 
 	addPixelElement();
@@ -56,14 +104,18 @@ const resetButton = document.getElementById("button");
 resetButton.onclick = function(e){
 
 	let inputVal = document.querySelector("input").value;
+	let pVal = parseInt(document.querySelector("select").value);
+	paletteIndex = pVal;
+	resetPaletteColor(pVal);
+
 	if(inputVal < 8) {inputVal = 8};
 	if(inputVal > 48) {inputVal = 48};
-	dimensionVal = inputVal;
-	document.querySelector("input").value = inputVal;
+	dimensionVal = Math.round(inputVal);
+	document.querySelector("input").value = dimensionVal;
 	color = "rgb(0, 0, 0)";
 	const paletteSingle = document.getElementById("currentColor"); 
 	paletteSingle.style.background = color;
-	addPixelElement(inputVal);
+	addPixelElement(dimensionVal);
 };
 
 // png data 
@@ -92,7 +144,7 @@ function stringToByte(str = "0"){
 	return binaryStr;
 }
 
-function paletteEncoding(p = colorNum){
+function paletteEncoding(p = colorNum[paletteIndex]){
 
 	var paletteStr = new String("");
 	var paletteArr = [];
@@ -194,7 +246,7 @@ function zlibLength (length){
 function zlibHeader(){
 
 	const ZLIB_WINDOW_SIZE = 1024 * 32;
-	let cinfo = 7;
+	let cinfo = 7; //0-7, doesn't matter here
 	let compressionMethod = 8; 
 	
 	let cmf = (cinfo << 4) | compressionMethod;
