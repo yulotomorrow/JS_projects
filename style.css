@@ -82,7 +82,7 @@ p{
 	height: 500px;
 	width: 500px;   
     background: rgb(25, 27, 31);	
-	border: 5px solid rgb(25, 27, 31);
+	border: 5px solid rgb(40, 43, 48);
 }
 #paletteDiv{
     display : grid;
@@ -129,7 +129,7 @@ p{
 }
 
 .pixel{
-    border : 1px solid rgb(25, 27, 31);
+    border : 1px solid rgb(53, 51, 68);
     background: rgb(255, 255, 255);
 }
 
