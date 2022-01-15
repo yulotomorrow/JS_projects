@@ -24,7 +24,6 @@ const colorNum = [[[0, 0, 0], [72, 61, 139], [105, 105, 105], [153, 50, 204],
 				[67, 80, 59], [71, 69, 92], [96, 111, 78], [69, 80, 97],
 				[157, 176, 134], [199, 193, 171], [203, 210, 194], [255, 255, 255]],
 				];
-// the list below could put up from numbers
 
 function parsePalette(color){
 
@@ -45,9 +44,6 @@ function parsePalette(color){
 }
 
 var colorList =  parsePalette(colorNum[paletteIndex]);
-/*["rgb(0, 0, 0)", "rgb(72, 61, 139)","rgb(105, 105, 105)", "rgb(153, 50, 204)", 
-				"rgb(65, 105, 225)", "rgb(147, 112, 219)", "rgb(210, 105, 30)", "rgb(188, 143, 143)", 
-				"rgb(255, 153, 203)", "rgb(255, 228, 225)", "rgb(245, 234, 51)", "rgb(255, 255, 255)"];*/
 
 function addPixelElement(dimension = 16){
 
@@ -317,5 +313,6 @@ const dlButton = document.getElementById("dlButton");
 dlButton.onclick = function(e){
 
 //	download(createPNG(), "test.txt", "text/txt");
-	download(createPNG(), "test.png", "image/png");
+	download(createPNG(), "myPixelArt.png", "image/png");
+
 };
